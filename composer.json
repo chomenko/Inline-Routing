@@ -1,0 +1,31 @@
+{
+  "name": "chomenko/inline-routing",
+  "type": "extension",
+  "description": "Inline routing from Nette framework",
+  "keywords": ["Inline", "routing", "Nette"],
+  "homepage": "https://github.com/chomenko/inline-routing",
+  "license": [],
+  "authors": [
+    {
+      "name": "Mykola Chomenko",
+      "homepage": "http://dipcom.cz",
+      "email": "mykola.chomenko@dipcom.cz"
+    }
+  ],
+  "support": {
+    "email": "mykola.chomenko@dipcom.cz"
+  },
+  "require": {
+    "php": ">=7.2",
+    "nette/di": "^2.4 || ^3.0",
+    "symfony/config": "^4.3",
+    "symfony/routing": "^4.3",
+    "kdyby/doctrine": "^3.3",
+    "kdyby/annotations": "^2.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Chomenko\\InlineRouting\\": "src/"
+    }
+  }
+}
