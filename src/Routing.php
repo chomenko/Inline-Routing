@@ -9,7 +9,6 @@ namespace Chomenko\InlineRouting;
 use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
-use Symfony\Component\Routing\Route;
 use Chomenko\InlineRouting\Exception\RouteException;
 use Chomenko\InlineRouting\Services\Config;
 use Chomenko\InlineRouting\Services\ILoader;
@@ -144,7 +143,7 @@ class Routing
 				}
 			}
 			foreach ($routeCollection as $name => $route) {
-				$route->setOption("name", $name);
+				$route->setOption(AnnotationClassLoader::NAME_OPTION_KEY, $name);
 			}
 			$this->cache->save("RouteCollection", $routeCollection);
 		}
@@ -185,8 +184,9 @@ class Routing
 	 */
 	public function getRouteByHash(string $hash): ?Route
 	{
+		/** @var Route $route */
 		foreach ($this->getRouteCollection() as $route) {
-			if ($hash === $route->getOption(AnnotationClassLoader::HASH_OPTION_KEY)) {
+			if ($hash === $route->getHash()) {
 				return $route;
 			}
 		}
@@ -198,8 +198,9 @@ class Routing
 	 */
 	public function getRouteByClass($class)
 	{
+		/** @var Route $route */
 		foreach ($this->getRouteCollection() as $route) {
-			if ($route->getOption(AnnotationClassLoader::CLASS_OPTION_KEY) === $class) {
+			if ($route->getClass() === $class) {
 				return $route;
 			}
 		}
@@ -215,13 +216,8 @@ class Routing
 	 */
 	public function invokeRoute(Presenter $presenter, Route $route, array $parameters = [])
 	{
-		/** @var IAnnotationExtension[] $extensions */
-		$extensions = $route->getOption(AnnotationClassLoader::EXTENSIONS_OPTION_KEY);
-		$class = $route->getOption(AnnotationClassLoader::CLASS_OPTION_KEY);
-		$method = $route->getOption(AnnotationClassLoader::METHOD_OPTION_KEY);
-
-		$refClass = new \ReflectionClass($class);
-		$refMethod = $refClass->getMethod($method);
+		$refClass = new \ReflectionClass($route->getClass());
+		$refMethod = $refClass->getMethod($route->getMethod());
 
 		$arguments = new Arguments();
 		foreach ($refMethod->getParameters() as $parameter) {
@@ -232,7 +228,7 @@ class Routing
 			}
 		}
 
-		foreach ($extensions as $annotation) {
+		foreach ($route->getExtensions() as $annotation) {
 			$extension = $this->getExtension($annotation->getExtensionService());
 			$extension->invoke($route, $annotation, $parameters, $arguments, $refMethod);
 		}

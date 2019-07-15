@@ -47,4 +47,12 @@ class RouteException extends \Exception
 		return new self("Message replace require parameter '$parameter'");
 	}
 
+	/**
+	 * @return RouteException
+	 */
+	public static function routeIsNotInitialized()
+	{
+		return new self("Route is not initialized");
+	}
+
 }

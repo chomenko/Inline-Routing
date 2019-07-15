@@ -8,7 +8,7 @@ namespace Chomenko\InlineRouting;
 
 use Doctrine\Common\Annotations\Reader;
 use Symfony\Component\Routing\Loader\AnnotationClassLoader as BaseLoader;
-use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\Route as BaseRoute;
 
 class AnnotationClassLoader extends BaseLoader
 {
@@ -17,6 +17,7 @@ class AnnotationClassLoader extends BaseLoader
 	const METHOD_OPTION_KEY = "_method";
 	const HASH_OPTION_KEY = "_hash";
 	const EXTENSIONS_OPTION_KEY = "_extensions";
+	const NAME_OPTION_KEY = "_name";
 
 	/**
 	 * @var Routing
@@ -35,12 +36,12 @@ class AnnotationClassLoader extends BaseLoader
 	}
 
 	/**
-	 * @param Route $route
+	 * @param BaseRoute|Route $route
 	 * @param \ReflectionClass $class
 	 * @param \ReflectionMethod $method
 	 * @param mixed $annot
 	 */
-	protected function configureRoute(Route $route, \ReflectionClass $class, \ReflectionMethod $method, $annot)
+	protected function configureRoute(BaseRoute $route, \ReflectionClass $class, \ReflectionMethod $method, $annot)
 	{
 		$extensions = [];
 		foreach ($this->reader->getMethodAnnotations($method) as $annotation) {
@@ -56,6 +57,11 @@ class AnnotationClassLoader extends BaseLoader
 		]);
 		Events::INITIALIZE_ROUTE; //link
 		$this->routing->onInitializeRoute($route, $class, $method, $annot);
+	}
+
+	protected function createRoute($path, $defaults, $requirements, $options, $host, $schemes, $methods, $condition)
+	{
+		return new Route($path, $defaults, $requirements, $options, $host, $schemes, $methods, $condition);
 	}
 
 }

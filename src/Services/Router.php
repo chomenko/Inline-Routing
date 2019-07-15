@@ -6,7 +6,7 @@
 
 namespace Chomenko\InlineRouting\Services;
 
-use Chomenko\InlineRouting\AnnotationClassLoader;
+use Chomenko\InlineRouting\Route;
 use Chomenko\InlineRouting\Routing;
 use Nette\Application\IPresenterFactory;
 use Nette\Application\IRouter;
@@ -62,6 +62,7 @@ class Router implements IRouter
 			return NULL;
 		}
 
+		/** @var Route $route */
 		$route = $collection->get($match["_route"]);
 		unset($match["_route"]);
 		$parameters = $match;
@@ -75,8 +76,7 @@ class Router implements IRouter
 			}
 		}
 
-		$class = $route->getOption(AnnotationClassLoader::CLASS_OPTION_KEY);
-		$hash = $route->getOption(AnnotationClassLoader::HASH_OPTION_KEY);
+		$class = $route->getClass();
 		$presenterName = $this->presenterFactory->unformatPresenterClass($class);
 
 		if (!$presenterName) {
@@ -85,7 +85,7 @@ class Router implements IRouter
 			if (substr($className, -9) === "Presenter") {
 				$className = substr($className, 0, -9);
 			}
-			$presenterName = "Inline:" . $hash . ":" . $className;
+			$presenterName = "Inline:" . $route->getHash() . ":" . $className;
 		}
 		return new AppRequest($presenterName, NULL, $parameters);
 	}
@@ -102,7 +102,7 @@ class Router implements IRouter
 		if (isset($exp[0]) && $exp[0] === "Inline" && isset($exp[1])) {
 			$routeHash = $exp[1];
 			$route = $this->routing->getRouteByHash($routeHash);
-			$name = $route->getOption("name");
+			$name = $route->getName();
 
 			$parameters = $appRequest->getParameters();
 			unset($parameters["action"]);
