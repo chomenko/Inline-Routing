@@ -56,18 +56,85 @@ trait InlineRouting
 	}
 
 	/**
+	 * @param object $component
 	 * @param string $destination
 	 * @param array $args
-	 * @return string
+	 * @param string $mode forward|redirect|link
+	 * @return Request|string|null
 	 * @throws \Nette\Application\UI\InvalidLinkException
 	 */
-	public function link($destination, $args = [])
+	protected function createRequest($component, $destination, array $args, $mode)
 	{
+		/** @var Request $request */
+		$request = $this->request;
+		$route = NULL;
 		if ($this->inlineRouting->getRoute($destination)) {
-			return $this->inlineRouting->createLink($destination, $args);
+			$route = $this->inlineRouting->getRoute($destination);
 		}
-		return parent::link($destination);
+
+		if ($destination == "this") {
+			$route = $request->getParameter("_route");
+		}
+
+		if ($route instanceof Route) {
+			$routeName = $route->getOption(AnnotationClassLoader::HASH_OPTION_KEY);
+
+			$match = $request->getParameter("_match");
+			$variables = $route->compile()->getVariables();
+
+			$parameters = [];
+			foreach ($args as $key => $value) {
+				if (is_int($key) && array_key_exists($key, $variables)) {
+					$parameters[$variables[$key]] = $value;
+					continue;
+				}
+				$parameters[$key] = $value;
+			}
+
+			foreach ($variables as $name) {
+				if (!array_key_exists($name, $parameters) && array_key_exists($name, $match)) {
+					$parameters[$name] = $match[$name];
+				}
+			}
+
+			$path = explode('\\', get_class($this));
+			$className = array_pop($path);
+
+
+			if (substr($className, -9) === "Presenter") {
+				$className = substr($className, 0, -9);
+			}
+			$parameters["_match"] = $parameters;
+			$parameters["action"] = "inlineAction";
+			$parameters["_route"] = $route;
+
+			$appRequest = new Request("Inline:" . $routeName . ":" . $className, Request::FORWARD, $parameters);
+
+			if ($mode === "forward") {
+				return $appRequest;
+			}
+			return $this->requestToUrl($appRequest);
+		}
+		return parent::createRequest($component, $destination, $args, $mode);
 	}
+
+	/**
+	 * @param string|Request $destination
+	 * @param array $args
+	 * @throws \Nette\Application\AbortException
+	 * @throws \Nette\Application\UI\InvalidLinkException
+	 */
+	public function forward($destination, $args = [])
+	{
+		if (!$destination instanceof Request) {
+			$request = $this->createRequest($this, $destination, $args, 'forward');
+			if ($request) {
+				$destination = $request;
+			}
+		}
+		parent::forward($destination, $args);
+	}
+
 
 	/**
 	 * @throws Exception\RouteException

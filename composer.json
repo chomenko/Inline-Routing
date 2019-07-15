@@ -21,7 +21,8 @@
     "symfony/config": "^4.3",
     "symfony/routing": "^4.3",
     "kdyby/doctrine": "^3.3",
-    "kdyby/annotations": "^2.5"
+    "kdyby/annotations": "^2.5",
+    "chomenko/presenter-factory-listener": "^1.0"
   },
   "autoload": {
     "psr-4": {

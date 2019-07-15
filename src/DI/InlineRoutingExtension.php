@@ -8,6 +8,7 @@ namespace Chomenko\InlineRouting\DI;
 
 use Chomenko\InlineRouting\Config;
 use Chomenko\InlineRouting\Extensions\EntityTransformExtension;
+use Chomenko\InlineRouting\Listeners\PresenterFactory;
 use Chomenko\InlineRouting\Routing;
 use Chomenko\InlineRouting\Services;
 use Nette\Application\Routers\RouteList;
@@ -48,7 +49,6 @@ class InlineRoutingExtension extends CompilerExtension
 
 		$builder->addDefinition($this->prefix('routing'))
 			->setFactory(Routing::class, ["loader" => $loader])
-			->addSetup('initialize')
 			->setAutowired(TRUE);
 
 		foreach ($this->default["extensions"] as $i => $extension) {
@@ -56,6 +56,11 @@ class InlineRoutingExtension extends CompilerExtension
 				->setFactory($extension)
 				->setAutowired(TRUE);
 		}
+
+		$builder->addDefinition($this->prefix('presenter.factory'))
+			->setFactory(PresenterFactory::class)
+			->addTag("kdyby.subscriber", TRUE)
+			->setAutowired(FALSE);
 
 		$builder->addDefinition($this->prefix('router'))
 			->setFactory(Services\Router::class)
@@ -67,6 +72,9 @@ class InlineRoutingExtension extends CompilerExtension
 		$builder = $this->getContainerBuilder();
 		$builder->getDefinitionByType(RouteList::class)
 			->addSetup('prepend', [$this->prefix('@router')]);
+
+		$builder->getDefinition($this->prefix('routing'))
+			->addSetup('initialize');
 	}
 
 	/**

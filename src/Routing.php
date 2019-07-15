@@ -6,6 +6,10 @@
 
 namespace Chomenko\InlineRouting;
 
+use Symfony\Component\Routing\Generator\UrlGenerator;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\Route;
 use Chomenko\InlineRouting\Exception\RouteException;
 use Chomenko\InlineRouting\Services\Config;
 use Chomenko\InlineRouting\Services\ILoader;
@@ -18,14 +22,11 @@ use Nette\DI\Container;
 use Nette\Http\IRequest;
 use Nette\Http\Request;
 use Nette\SmartObject;
-use Symfony\Component\Routing\Generator\UrlGenerator;
-use Symfony\Component\Routing\RequestContext;
-use Symfony\Component\Routing\RouteCollection;
-use Symfony\Component\Routing\Route;
 use Tracy\Debugger;
 
 /**
  *  @method onInvokeMethod(Presenter $presenter, Route $route, array $parameters, Arguments $arguments)
+ *  @method onInitializeRoute(Route $route, \ReflectionClass $class, \ReflectionMethod $method, $annot)
  */
 class Routing
 {
@@ -38,6 +39,11 @@ class Routing
 	 * @var callable[]
 	 */
 	public $onInvokeMethod = [];
+
+	/**
+	 * @var callable[]
+	 */
+	public $onInitializeRoute = [];
 
 	/**
 	 * @var ILoader
@@ -115,8 +121,7 @@ class Routing
 		$this->cache = new Cache($storage, self::CACHE_NAMESPACE);
 		$this->loader = $loader;
 		$this->reader = $reader;
-
-		$this->classLoader = new AnnotationClassLoader($this->reader);
+		$this->classLoader = new AnnotationClassLoader($this, $this->reader);
 		$this->config = $config;
 		$this->container = $container;
 		$this->request = $request;
@@ -137,6 +142,9 @@ class Routing
 				if ($collection->count() > 0) {
 					$routeCollection->addCollection($collection);
 				}
+			}
+			foreach ($routeCollection as $name => $route) {
+				$route->setOption("name", $name);
 			}
 			$this->cache->save("RouteCollection", $routeCollection);
 		}
@@ -166,9 +174,22 @@ class Routing
 	 * @param string $name
 	 * @return Route|null
 	 */
-	public function getRoute(string $name)
+	public function getRoute(string $name): ?Route
 	{
 		return $this->getRouteCollection()->get($name);
+	}
+
+	/**
+	 * @param string $hash
+	 * @return Route|null
+	 */
+	public function getRouteByHash(string $hash): ?Route
+	{
+		foreach ($this->getRouteCollection() as $route) {
+			if ($hash === $route->getOption(AnnotationClassLoader::HASH_OPTION_KEY)) {
+				return $route;
+			}
+		}
 	}
 
 	/**
@@ -215,7 +236,7 @@ class Routing
 			$extension = $this->getExtension($annotation->getExtensionService());
 			$extension->invoke($route, $annotation, $parameters, $arguments, $refMethod);
 		}
-
+		Events::INVOKE_METHOD; //link
 		$this->onInvokeMethod($presenter, $route, $parameters, $arguments);
 		$refMethod->invokeArgs($presenter, $arguments->toArray());
 	}

@@ -69,8 +69,24 @@ class Router implements IRouter
 		$parameters["_route"] = $route;
 		$parameters["_match"] = $match;
 
+		foreach ($url->getQueryParameters() as $name => $value) {
+			if (!array_key_exists($name, $parameters)) {
+				$parameters[$name] = $value;
+			}
+		}
+
 		$class = $route->getOption(AnnotationClassLoader::CLASS_OPTION_KEY);
+		$hash = $route->getOption(AnnotationClassLoader::HASH_OPTION_KEY);
 		$presenterName = $this->presenterFactory->unformatPresenterClass($class);
+
+		if (!$presenterName) {
+			$path = explode('\\', $class);
+			$className = array_pop($path);
+			if (substr($className, -9) === "Presenter") {
+				$className = substr($className, 0, -9);
+			}
+			$presenterName = "Inline:" . $hash . ":" . $className;
+		}
 		return new AppRequest($presenterName, NULL, $parameters);
 	}
 
@@ -81,6 +97,20 @@ class Router implements IRouter
 	 */
 	public function constructUrl(AppRequest $appRequest, Url $refUrl)
 	{
+		$exp = explode(":", $appRequest->getPresenterName());
+
+		if (isset($exp[0]) && $exp[0] === "Inline" && isset($exp[1])) {
+			$routeHash = $exp[1];
+			$route = $this->routing->getRouteByHash($routeHash);
+			$name = $route->getOption("name");
+
+			$parameters = $appRequest->getParameters();
+			unset($parameters["action"]);
+			unset($parameters["_match"]);
+			unset($parameters["_route"]);
+
+			return new Url($this->routing->createLink($name, $parameters));
+		}
 		return NULL;
 	}
 
