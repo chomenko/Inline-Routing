@@ -25,7 +25,9 @@ use Tracy\Debugger;
 
 /**
  *  @method onInvokeMethod(Presenter $presenter, Route $route, array $parameters, Arguments $arguments)
+ *  @method onInvokedMethod(Presenter $presenter, Route $route, $result)
  *  @method onInitializeRoute(Route $route, \ReflectionClass $class, \ReflectionMethod $method, $annot)
+ *  @method onInitialized(RouteCollection $collection)
  */
 class Routing
 {
@@ -37,7 +39,17 @@ class Routing
 	/**
 	 * @var callable[]
 	 */
+	public $onInitialized = [];
+
+	/**
+	 * @var callable[]
+	 */
 	public $onInvokeMethod = [];
+
+	/**
+	 * @var callable[]
+	 */
+	public $onInvokedMethod = [];
 
 	/**
 	 * @var callable[]
@@ -116,12 +128,12 @@ class Routing
 		Container $container,
 		IRequest $request
 	) {
+		$this->config = $config;
 		$this->context = $this->createContext($request);
 		$this->cache = new Cache($storage, self::CACHE_NAMESPACE);
 		$this->loader = $loader;
 		$this->reader = $reader;
 		$this->classLoader = new AnnotationClassLoader($this, $this->reader);
-		$this->config = $config;
 		$this->container = $container;
 		$this->request = $request;
 	}
@@ -145,6 +157,9 @@ class Routing
 			foreach ($routeCollection as $name => $route) {
 				$route->setOption(AnnotationClassLoader::NAME_OPTION_KEY, $name);
 			}
+
+			Events::INITIALIZED; //link
+			$this->onInitialized($routeCollection);
 			$this->cache->save("RouteCollection", $routeCollection);
 		}
 		$this->routeCollection = $routeCollection;
@@ -234,7 +249,11 @@ class Routing
 		}
 		Events::INVOKE_METHOD; //link
 		$this->onInvokeMethod($presenter, $route, $parameters, $arguments);
-		$refMethod->invokeArgs($presenter, $arguments->toArray());
+
+		$result = $refMethod->invokeArgs($presenter, $arguments->toArray());
+
+		Events::INVOKED_METHOD; //link
+		$this->onInvokedMethod($presenter, $route, $result);
 	}
 
 	/**
@@ -249,8 +268,8 @@ class Routing
 			$httpRequest->getMethod(),
 			$url->getHost(),
 			$url->getScheme(),
-			80,
-			443,
+			$this->config->getHttpPort(),
+			$this->config->getHttpsPort(),
 			$url->getPath(),
 			$url->getQuery()
 		);

@@ -15,6 +15,16 @@ class Config
 	private $tempDir;
 
 	/**
+	 * @var int
+	 */
+	private $httpPort = 80;
+
+	/**
+	 * @var int
+	 */
+	private $httpsPort = 443;
+
+	/**
 	 * @var array
 	 */
 	private $loader = [
@@ -75,6 +85,22 @@ class Config
 	public function isEnableLoadRobotLoader(): bool
 	{
 		return $this->loader["loadRobotLoader"];
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getHttpPort(): int
+	{
+		return $this->httpPort;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getHttpsPort(): int
+	{
+		return $this->httpsPort;
 	}
 
 }

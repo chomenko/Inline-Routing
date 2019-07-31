@@ -147,7 +147,7 @@ trait InlineRouting
 		$parameters = $request->getParameters();
 
 		$method = $this->_route->getOption(AnnotationClassLoader::METHOD_OPTION_KEY);
-		$this->setView(ucfirst($method));
+		$this->setView(lcfirst($method));
 		$this->inlineRouting->invokeRoute($this, $this->_route, $parameters);
 	}
 
