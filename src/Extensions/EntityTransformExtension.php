@@ -9,11 +9,13 @@ namespace Chomenko\InlineRouting\Extensions;
 use Chomenko\InlineRouting\Extension;
 use Chomenko\InlineRouting\IAnnotationExtension;
 use Chomenko\InlineRouting\Arguments;
-use Chomenko\InlineRouting\Exception\RouteException;
+use Chomenko\InlineRouting\Exceptions\RouteException;
 use Chomenko\InlineRouting\Inline\EntityTransform;
+use Chomenko\InlineRouting\Route;
+use Chomenko\InlineRouting\Exceptions\Attribute;
+use Chomenko\InlineRouting\Exceptions\BadRequestException;
 use Doctrine\ORM\EntityManager;
-use Nette\Application\BadRequestException;
-use Symfony\Component\Routing\Route;
+use Nette\Application\UI\Presenter;
 
 class EntityTransformExtension extends Extension
 {
@@ -33,6 +35,7 @@ class EntityTransformExtension extends Extension
 	}
 
 	/**
+	 * @param Presenter $presenter
 	 * @param Route $route
 	 * @param IAnnotationExtension $annotation
 	 * @param array $parameters
@@ -42,7 +45,7 @@ class EntityTransformExtension extends Extension
 	 * @throws BadRequestException
 	 * @throws RouteException
 	 */
-	public function invoke(Route $route, IAnnotationExtension $annotation, array $parameters, Arguments $arguments, \ReflectionMethod $method)
+	public function invoke(Presenter $presenter, Route $route, IAnnotationExtension $annotation, array $parameters, Arguments $arguments, \ReflectionMethod $method): void
 	{
 		if (!$annotation instanceof EntityTransform) {
 			throw RouteException::entityTransformerMustInstance();
@@ -70,7 +73,9 @@ class EntityTransformExtension extends Extension
 					return;
 				}
 			}
-			throw new BadRequestException($annotation->getErrorMessage(["value" => $value]), $annotation->getErrorCode());
+			$ex = new BadRequestException($annotation->getErrorMessage(["value" => $value]), $annotation->getErrorCode());
+			$ex->setParameter(new Attribute($parameter->getName()));
+			throw $ex;
 		}
 		$arguments->set($parameter, $entity);
 	}

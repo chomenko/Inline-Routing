@@ -144,7 +144,7 @@ class Routing
 	public function initialize()
 	{
 		$routeCollection = $this->cache->load("RouteCollection");
-		if (!$routeCollection || !Debugger::$productionMode) {
+		if (!$routeCollection) {
 			$this->loader->initialize();
 			$classes = $this->loader->getPresenters();
 			$routeCollection = new RouteCollection();
@@ -157,11 +157,12 @@ class Routing
 			foreach ($routeCollection as $name => $route) {
 				$route->setOption(AnnotationClassLoader::NAME_OPTION_KEY, $name);
 			}
-
-			Events::INITIALIZED; //link
-			$this->onInitialized($routeCollection);
 			$this->cache->save("RouteCollection", $routeCollection);
 		}
+
+		Events::INITIALIZED; //link
+		$this->onInitialized($routeCollection);
+
 		$this->routeCollection = $routeCollection;
 		$this->generator = new UrlGenerator($routeCollection, $this->context);
 	}
@@ -242,16 +243,21 @@ class Routing
 				$arguments->set($parameter->getName(), $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : NULL);
 			}
 		}
-
+		/** @var IExtension[] $extensions */
+		$extensions = [];
 		foreach ($route->getExtensions() as $annotation) {
 			$extension = $this->getExtension($annotation->getExtensionService());
-			$extension->invoke($route, $annotation, $parameters, $arguments, $refMethod);
+			$extensions[] = $extension;
+			$extension->invoke($presenter, $route, $annotation, $parameters, $arguments, $refMethod);
 		}
 		Events::INVOKE_METHOD; //link
 		$this->onInvokeMethod($presenter, $route, $parameters, $arguments);
 
 		$result = $refMethod->invokeArgs($presenter, $arguments->toArray());
 
+		foreach ($extensions as $extension) {
+			$extension->invoked($presenter, $route, $result);
+		}
 		Events::INVOKED_METHOD; //link
 		$this->onInvokedMethod($presenter, $route, $result);
 	}

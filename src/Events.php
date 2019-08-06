@@ -26,6 +26,6 @@ class Events
 	/**
 	 * onInitialized(RouteCollection $collection)
 	 */
-	const INITIALIZED = Routing::class . "::onInitializeRoute";
+	const INITIALIZED = Routing::class . "::onInitialized";
 
 }

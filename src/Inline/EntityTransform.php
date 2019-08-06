@@ -35,7 +35,7 @@ class EntityTransform extends AnnotationExtension
 	/**
 	 * @var string
 	 */
-	public $errorMessage = "Page not found ('{{ parameter }}:{{ value }}' does not exist) ";
+	public $errorMessage = "Not found. Item '{{ parameter }}' with value '{{ value }}' does not exist.";
 
 	/**
 	 * @return string
@@ -72,7 +72,6 @@ class EntityTransform extends AnnotationExtension
 	/**
 	 * @param array $parameters
 	 * @return string
-	 * @throws \Chomenko\InlineRouting\Exception\RouteException
 	 */
 	public function getErrorMessage(array $parameters): string
 	{

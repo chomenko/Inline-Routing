@@ -8,6 +8,8 @@ namespace Chomenko\InlineRouting;
 
 use Nette\Application\BadRequestException;
 use Nette\Application\Request;
+use Nette\Application\UI\Presenter;
+use Nette\Http\IRequest;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -97,7 +99,7 @@ trait InlineRouting
 				}
 			}
 
-			$path = explode('\\', get_class($this));
+			$path = explode('\\', $route->getOption("_class"));
 			$className = array_pop($path);
 
 
@@ -119,10 +121,11 @@ trait InlineRouting
 	}
 
 	/**
-	 * @param string|Request $destination
+	 * @param string|IRequest $destination
 	 * @param array $args
 	 * @throws \Nette\Application\AbortException
 	 * @throws \Nette\Application\UI\InvalidLinkException
+	 * @throws \ReflectionException
 	 */
 	public function forward($destination, $args = [])
 	{
@@ -130,6 +133,11 @@ trait InlineRouting
 			$request = $this->createRequest($this, $destination, $args, 'forward');
 			if ($request) {
 				$destination = $request;
+				$refClass = new \ReflectionClass(Presenter::class);
+				$prop = $refClass->getProperty("lastCreatedRequest");
+				$prop->setAccessible(TRUE);
+				$prop->setValue($this, $request);
+				$prop->setAccessible(FALSE);
 			}
 		}
 		parent::forward($destination, $args);

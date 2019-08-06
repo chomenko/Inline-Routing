@@ -4,8 +4,9 @@
  * Email: mykola.chomenko@dipcom.cz
  */
 
-namespace Chomenko\InlineRouting\Exception;
+namespace Chomenko\InlineRouting\Exceptions;
 
+use Chomenko\InlineRouting\Extension;
 use Chomenko\InlineRouting\Inline\EntityTransform;
 
 class RouteException extends \Exception
