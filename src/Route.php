@@ -6,7 +6,7 @@
 
 namespace Chomenko\InlineRouting;
 
-use Chomenko\InlineRouting\Exception\RouteException;
+use Chomenko\InlineRouting\Exceptions\RouteException;
 
 class Route extends \Symfony\Component\Routing\Route
 {

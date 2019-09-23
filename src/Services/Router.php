@@ -17,6 +17,7 @@ use Nette\Http\Url;
 use Symfony\Component\Routing\Exception\NoConfigurationException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Chomenko\InlineRouting\Exceptions\RouteException;
 
 class Router implements IRouter
 {
@@ -94,6 +95,7 @@ class Router implements IRouter
 	 * @param AppRequest $appRequest
 	 * @param Url $refUrl
 	 * @return string|null
+	 * @throws RouteException
 	 */
 	public function constructUrl(AppRequest $appRequest, Url $refUrl)
 	{

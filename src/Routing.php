@@ -6,10 +6,10 @@
 
 namespace Chomenko\InlineRouting;
 
+use Chomenko\InlineRouting\Exceptions\RouteException;
 use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
-use Chomenko\InlineRouting\Exception\RouteException;
 use Chomenko\InlineRouting\Services\Config;
 use Chomenko\InlineRouting\Services\ILoader;
 use Doctrine\Common\Annotations\AnnotationReader;
@@ -21,7 +21,6 @@ use Nette\DI\Container;
 use Nette\Http\IRequest;
 use Nette\Http\Request;
 use Nette\SmartObject;
-use Tracy\Debugger;
 
 /**
  *  @method onInvokeMethod(Presenter $presenter, Route $route, array $parameters, Arguments $arguments)
